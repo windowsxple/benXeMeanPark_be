@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../libs/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model accounts {
+  account_id   Int       @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  password     String   @db.VarChar(255)
+  full_name    String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(20)
+  avatar       String?  @db.VarChar(500)
+  role         String?  @default("Customer") @db.VarChar(50)
+  status       String?  @default("Active") @db.VarChar(50)
+  is_verified  Boolean? @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  bookings bookings[]
+  reviews   reviews[]
+
+  @@index([email], map: "idx_accounts_email")
+  @@index([status], map: "idx_accounts_status")
+  @@index([role], map: "idx_accounts_role")
+}
+
+model transport_types {
+  transport_type_id Int    @id @default(autoincrement())
+  code              String @db.VarChar(50)
+  name              String? @db.VarChar(255)
+
+  transport_providers transport_providers[]
+  transport_trips     transport_trips[]
+  bookings            bookings[]
+
+  @@unique([code], map: "uk_transport_types_code")
+  @@index([code], map: "idx_transport_types_code")
+}
+
+model transport_providers {
+  provider_id      Int       @id @default(autoincrement())
+  transport_type_id Int
+  name             String    @db.VarChar(255)
+  email            String?   @db.VarChar(255)
+  hotline          String?   @db.VarChar(20)
+  logo             String?   @db.VarChar(500)
+  description      String?
+  rating           Float?    @default(0)
+  status           String?   @default("Active") @db.VarChar(50)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+
+  transport_type          transport_types         @relation(fields: [transport_type_id], references: [transport_type_id], onUpdate: NoAction)
+  transport_provider_branches transport_provider_branches[]
+  transport_vehicles       transport_vehicles[]
+  transport_trips         transport_trips[]
+  reviews                 reviews[]
+
+  @@index([transport_type_id], map: "idx_transport_providers_transport_type_id")
+  @@index([status], map: "idx_transport_providers_status")
+}
+
+model transport_provider_branches {
+  provider_branch_id Int       @id @default(autoincrement())
+  provider_id        Int
+  name               String    @db.VarChar(255)
+  address            String?   @db.VarChar(500)
+  phone              String?   @db.VarChar(20)
+  status             String?   @default("Active") @db.VarChar(50)
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+
+  transport_provider transport_providers @relation(fields: [provider_id], references: [provider_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([provider_id], map: "idx_transport_provider_branches_provider_id")
+  @@index([status], map: "idx_transport_provider_branches_status")
+}
+
+model locations {
+  location_id   Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  code          String?   @db.VarChar(50)
+  type          String    @db.VarChar(50)
+  parent_id     Int?
+
+  parent        locations? @relation("LocationParent", fields: [parent_id], references: [location_id], onUpdate: NoAction)
+  children      locations[] @relation("LocationParent")
+  routes_origin routes[] @relation("RouteOrigin")
+  routes_destination routes[] @relation("RouteDestination")
+
+  @@index([type], map: "idx_locations_type")
+  @@index([parent_id], map: "idx_locations_parent_id")
+  @@index([code], map: "idx_locations_code")
+}
+
+model transport_vehicles {
+  vehicle_id    Int       @id @default(autoincrement())
+  provider_id   Int
+  code          String?   @db.VarChar(50)
+  model         String?   @db.VarChar(255)
+  vehicle_type  String?   @db.VarChar(255)
+  total_seats   Int?      @default(0)
+  status        String?   @default("Active") @db.VarChar(50)
+
+  transport_provider transport_providers @relation(fields: [provider_id], references: [provider_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_trips    transport_trips[]
+
+  @@index([provider_id], map: "idx_transport_vehicles_provider_id")
+  @@index([status], map: "idx_transport_vehicles_status")
+}
+
+model routes {
+  route_id                Int       @id @default(autoincrement())
+  origin_location_id      Int
+  destination_location_id Int
+  distance_km             Int?      @default(0)
+  estimated_duration      Int?      @default(0)
+  status                  String?   @default("Active") @db.VarChar(50)
+
+  origin_location      locations @relation("RouteOrigin", fields: [origin_location_id], references: [location_id], onUpdate: NoAction)
+  destination_location locations @relation("RouteDestination", fields: [destination_location_id], references: [location_id], onUpdate: NoAction)
+  transport_trips       transport_trips[]
+
+  @@index([origin_location_id], map: "idx_routes_origin_location_id")
+  @@index([destination_location_id], map: "idx_routes_destination_location_id")
+  @@index([status], map: "idx_routes_status")
+}
+
+model transport_trips {
+  trip_id           Int       @id @default(autoincrement())
+  transport_type_id Int
+  provider_id       Int
+  vehicle_id        Int
+  route_id           Int
+  trip_code         String?   @db.VarChar(50)
+  departure_time    DateTime  @db.Timestamp(6)
+  arrival_time      DateTime  @db.Timestamp(6)
+  base_price        Decimal?  @default(0) @db.Decimal(10, 2)
+  available_seats   Int?      @default(0)
+  status            String?   @default("Open") @db.VarChar(50)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  updated_at        DateTime? @default(now()) @db.Timestamp(6)
+
+  transport_type    transport_types    @relation(fields: [transport_type_id], references: [transport_type_id], onUpdate: NoAction)
+  transport_provider transport_providers @relation(fields: [provider_id], references: [provider_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_vehicle  transport_vehicles   @relation(fields: [vehicle_id], references: [vehicle_id], onUpdate: NoAction)
+  route              routes              @relation(fields: [route_id], references: [route_id], onUpdate: NoAction)
+  transport_seats    transport_seats[]
+  bookings           bookings[]
+  reviews            reviews[]
+
+  @@index([transport_type_id], map: "idx_transport_trips_transport_type_id")
+  @@index([provider_id], map: "idx_transport_trips_provider_id")
+  @@index([route_id], map: "idx_transport_trips_route_id")
+  @@index([departure_time], map: "idx_transport_trips_departure_time")
+  @@index([status], map: "idx_transport_trips_status")
+}
+
+model transport_seats {
+  seat_id    Int       @id @default(autoincrement())
+  trip_id    Int
+  seat_code  String    @db.VarChar(10)
+  seat_class String?   @default("Economy") @db.VarChar(50)
+  price      Decimal?  @default(0) @db.Decimal(10, 2)
+  status     String?   @default("Available") @db.VarChar(50)
+
+  transport_trip transport_trips @relation(fields: [trip_id], references: [trip_id], onDelete: Cascade, onUpdate: NoAction)
+  booking_seats  booking_seats[]
+
+  @@index([trip_id], map: "idx_transport_seats_trip_id")
+  @@index([status], map: "idx_transport_seats_status")
+  @@unique([trip_id, seat_code], map: "uk_transport_seats_trip_seat")
+}
+
+model bookings {
+  booking_id       Int       @id @default(autoincrement())
+  account_id       Int
+  transport_type_id Int
+  trip_id          Int
+  total_price      Decimal?  @default(0) @db.Decimal(10, 2)
+  booking_status   String?   @default("Pending") @db.VarChar(50)
+  payment_method   String?   @default("Cash") @db.VarChar(50)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+
+  account          accounts          @relation(fields: [account_id], references: [account_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_type   transport_types   @relation(fields: [transport_type_id], references: [transport_type_id], onUpdate: NoAction)
+  transport_trip   transport_trips  @relation(fields: [trip_id], references: [trip_id], onUpdate: NoAction)
+  booking_seats    booking_seats[]
+  payments         payments[]
+
+  @@index([account_id], map: "idx_bookings_account_id")
+  @@index([trip_id], map: "idx_bookings_trip_id")
+  @@index([booking_status], map: "idx_bookings_booking_status")
+  @@index([created_at], map: "idx_bookings_created_at")
+}
+
+model booking_seats {
+  booking_seat_id    Int       @id @default(autoincrement())
+  booking_id         Int
+  seat_id            Int
+  passenger_name     String    @db.VarChar(255)
+  passenger_phone    String?   @db.VarChar(20)
+  passenger_identity String?   @db.VarChar(50)
+  price              Decimal?  @default(0) @db.Decimal(10, 2)
+
+  booking bookings        @relation(fields: [booking_id], references: [booking_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_seat transport_seats @relation(fields: [seat_id], references: [seat_id], onUpdate: NoAction)
+
+  @@index([booking_id], map: "idx_booking_seats_booking_id")
+  @@index([seat_id], map: "idx_booking_seats_seat_id")
+}
+
+model payments {
+  payment_id       Int       @id @default(autoincrement())
+  booking_id       Int
+  amount           Decimal   @db.Decimal(10, 2)
+  payment_gateway  String    @db.VarChar(50)
+  transaction_code String?   @db.VarChar(255)
+  payment_status   String?   @default("Pending") @db.VarChar(50)
+  paid_at          DateTime? @db.Timestamp(6)
+
+  booking bookings @relation(fields: [booking_id], references: [booking_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([booking_id], map: "idx_payments_booking_id")
+  @@index([payment_status], map: "idx_payments_payment_status")
+  @@index([transaction_code], map: "idx_payments_transaction_code")
+}
+
+model promotions {
+  promotion_id    Int       @id @default(autoincrement())
+  code            String    @unique @db.VarChar(50)
+  description     String?   @db.VarChar(500)
+  discount_type   String    @db.VarChar(50)
+  discount_value  Decimal   @db.Decimal(10, 2)
+  start_date      DateTime  @db.Timestamp(6)
+  end_date        DateTime  @db.Timestamp(6)
+  status          String?   @default("Active") @db.VarChar(50)
+
+  @@index([code], map: "idx_promotions_code")
+  @@index([status], map: "idx_promotions_status")
+  @@index([start_date, end_date], map: "idx_promotions_dates")
+}
+
+model reviews {
+  review_id    Int       @id @default(autoincrement())
+  account_id   Int
+  provider_id  Int
+  trip_id      Int
+  rating       Int
+  comment      String?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  account          accounts          @relation(fields: [account_id], references: [account_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_provider transport_providers @relation(fields: [provider_id], references: [provider_id], onDelete: Cascade, onUpdate: NoAction)
+  transport_trip   transport_trips  @relation(fields: [trip_id], references: [trip_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([account_id], map: "idx_reviews_account_id")
+  @@index([provider_id], map: "idx_reviews_provider_id")
+  @@index([trip_id], map: "idx_reviews_trip_id")
+  @@index([rating], map: "idx_reviews_rating")
+}
+
