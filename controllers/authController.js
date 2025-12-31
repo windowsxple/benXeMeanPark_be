@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../libs/prisma.js';
+import { generateToken } from '../libs/jwtService.js';
 
 /**
  * Register a new account
@@ -132,40 +133,55 @@ export const register = async (req, res) => {
 };
 
 /**
- * Login with email and password
+ * Login with email/phone and password
  * POST /api/auth/login
- * Body: { email, password }
+ * Body: { emailOrPhone, password }
  */
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { emailOrPhone, password } = req.body;
 
-    // Validation
-    if (!email || !password) {
+    // Validation - check if emailOrPhone and password exist
+    // Handle both string and number types for emailOrPhone
+    const emailOrPhoneValue = emailOrPhone?.toString().trim() || '';
+    const passwordValue = password?.toString().trim() || '';
+
+    if (!emailOrPhoneValue || !passwordValue) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: 'Email/Phone and password are required',
       });
     }
 
-    // Validate email format
+    // Determine if input is email or phone
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const isEmail = emailRegex.test(emailOrPhoneValue);
+    const cleanPhone = emailOrPhoneValue.replace(/[\s\-\(\)]/g, '');
+    const isPhone = /^[0-9]{10,20}$/.test(cleanPhone);
+
+    if (!isEmail && !isPhone) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email format',
+        message: 'Invalid email or phone format',
       });
     }
 
-    // Find account by email
-    const account = await prisma.accounts.findUnique({
-      where: { email },
-    });
+    // Find account by email or phone
+    let account;
+    if (isEmail) {
+      account = await prisma.accounts.findUnique({
+        where: { email: emailOrPhoneValue },
+      });
+    } else {
+      account = await prisma.accounts.findFirst({
+        where: { phone: cleanPhone },
+      });
+    }
 
     if (!account) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Invalid email/phone or password',
       });
     }
 
@@ -183,7 +199,7 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Invalid email/phone or password',
       });
     }
 
@@ -202,10 +218,21 @@ export const login = async (req, res) => {
       updated_at: account.updated_at,
     };
 
+    // Generate JWT token
+    const tokenPayload = {
+      accountId: account.account_id,
+      email: account.email,
+      role: account.role
+    };
+    const token = generateToken(tokenPayload);
+
     res.json({
       success: true,
       message: 'Login successful',
-      data: accountInfo,
+      data: {
+        account: accountInfo,
+        token: token
+      },
     });
   } catch (error) {
     console.error('Login error:', error);

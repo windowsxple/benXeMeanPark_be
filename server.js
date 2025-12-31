@@ -53,8 +53,10 @@ app.use(
 
 // API routes
 import authRoutes from './routes/authRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -78,16 +80,16 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, async () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📦 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`📚 Swagger Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(` Server is running on http://localhost:${PORT}`);
+  console.log(` Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(` Swagger Documentation: http://localhost:${PORT}/api-docs`);
   
   // Test database connection
   const dbConnected = await testConnection();
   if (dbConnected) {
-    console.log(`✅ Database connection established`);
+    console.log(` Database connection established`);
   } else {
-    console.log(`⚠️  Database connection failed - check your DATABASE_URL in .env`);
+    console.log(`  Database connection failed - check your DATABASE_URL in .env`);
   }
 });
 

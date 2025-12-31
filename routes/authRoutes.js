@@ -75,16 +75,24 @@ router.post('/register', register);
  *   post:
  *     summary: Login with email and password
  *     tags: [Authentication]
- *     description: Authenticate user with email and password
+ *     description: Authenticate user with email/phone and password
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/LoginRequest'
- *           example:
- *             email: "user@example.com"
- *             password: "password123"
+ *           examples:
+ *             email:
+ *               summary: Login with email
+ *               value:
+ *                 emailOrPhone: "user@example.com"
+ *                 password: "password123"
+ *             phone:
+ *               summary: Login with phone
+ *               value:
+ *                 emailOrPhone: "0123456789"
+ *                 password: "password123"
  *     responses:
  *       200:
  *         description: Login successful
@@ -96,17 +104,19 @@ router.post('/register', register);
  *               success: true
  *               message: "Login successful"
  *               data:
- *                 account_id: 1
- *                 email: "user@example.com"
- *                 full_name: "Nguyen Van A"
- *                 phone: "0123456789"
- *                 date_of_birth: "2000-01-01T00:00:00.000Z"
- *                 avatar: null
- *                 role: "Customer"
- *                 status: "Active"
- *                 is_verified: false
- *                 created_at: "2024-12-30T15:00:00.000Z"
- *                 updated_at: "2024-12-30T15:00:00.000Z"
+ *                 account:
+ *                   account_id: 1
+ *                   email: "user@example.com"
+ *                   full_name: "Nguyen Van A"
+ *                   phone: "0123456789"
+ *                   date_of_birth: "2000-01-01T00:00:00.000Z"
+ *                   avatar: null
+ *                   role: "Customer"
+ *                   status: "Active"
+ *                   is_verified: false
+ *                   created_at: "2024-12-30T15:00:00.000Z"
+ *                   updated_at: "2024-12-30T15:00:00.000Z"
+ *                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
  *         description: Validation error
  *         content:
@@ -115,7 +125,7 @@ router.post('/register', register);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               success: false
- *               message: "Email and password are required"
+ *               message: "Email/Phone and password are required"
  *       401:
  *         description: Invalid credentials
  *         content:
@@ -124,7 +134,7 @@ router.post('/register', register);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               success: false
- *               message: "Invalid email or password"
+ *               message: "Invalid email/phone or password"
  *       403:
  *         description: Account is inactive
  *         content:

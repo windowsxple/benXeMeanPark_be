@@ -98,13 +98,12 @@ export const RegisterResponse = {
 
 export const LoginRequest = {
   type: 'object',
-  required: ['email', 'password'],
+  required: ['emailOrPhone', 'password'],
   properties: {
-    email: {
+    emailOrPhone: {
       type: 'string',
-      format: 'email',
       example: 'user@example.com',
-      description: 'Email address (required)'
+      description: 'Email address or phone number (required)'
     },
     password: {
       type: 'string',
@@ -128,54 +127,64 @@ export const LoginResponse = {
     data: {
       type: 'object',
       properties: {
-        account_id: {
-          type: 'integer',
-          example: 1
+        account: {
+          type: 'object',
+          properties: {
+            account_id: {
+              type: 'integer',
+              example: 1
+            },
+            email: {
+              type: 'string',
+              example: 'user@example.com'
+            },
+            full_name: {
+              type: 'string',
+              example: 'Nguyen Van A'
+            },
+            phone: {
+              type: 'string',
+              example: '0123456789'
+            },
+            date_of_birth: {
+              type: 'string',
+              format: 'date-time',
+              example: '2000-01-01T00:00:00.000Z'
+            },
+            avatar: {
+              type: 'string',
+              example: null
+            },
+            role: {
+              type: 'string',
+              enum: ['Customer', 'Admin', 'Provider', 'Staff'],
+              example: 'Customer'
+            },
+            status: {
+              type: 'string',
+              enum: ['Active', 'Inactive'],
+              example: 'Active'
+            },
+            is_verified: {
+              type: 'boolean',
+              example: false
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-12-30T15:00:00.000Z'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-12-30T15:00:00.000Z'
+            }
+          }
         },
-        email: {
+        token: {
           type: 'string',
-          example: 'user@example.com'
-        },
-        full_name: {
-          type: 'string',
-          example: 'Nguyen Van A'
-        },
-        phone: {
-          type: 'string',
-          example: '0123456789'
-        },
-        date_of_birth: {
-          type: 'string',
-          format: 'date-time',
-          example: '2000-01-01T00:00:00.000Z'
-        },
-        avatar: {
-          type: 'string',
-          example: null
-        },
-        role: {
-          type: 'string',
-          enum: ['Customer', 'Admin', 'Provider', 'Staff'],
-          example: 'Customer'
-        },
-        status: {
-          type: 'string',
-          enum: ['Active', 'Inactive'],
-          example: 'Active'
-        },
-        is_verified: {
-          type: 'boolean',
-          example: false
-        },
-        created_at: {
-          type: 'string',
-          format: 'date-time',
-          example: '2024-12-30T15:00:00.000Z'
-        },
-        updated_at: {
-          type: 'string',
-          format: 'date-time',
-          example: '2024-12-30T15:00:00.000Z'
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          description: 'JWT token for authentication'
         }
       }
     }
