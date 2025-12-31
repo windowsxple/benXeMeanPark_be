@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../libs/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model accounts {
@@ -13,6 +13,7 @@ model accounts {
   password     String   @db.VarChar(255)
   full_name    String?  @db.VarChar(255)
   phone        String?  @db.VarChar(20)
+  date_of_birth DateTime? @db.Date
   avatar       String?  @db.VarChar(500)
   role         String?  @default("Customer") @db.VarChar(50)
   status       String?  @default("Active") @db.VarChar(50)

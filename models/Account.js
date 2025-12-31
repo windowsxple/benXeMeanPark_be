@@ -28,6 +28,11 @@ export const accountSchema = {
     maxLength: 20,
     default: null
   },
+  dateOfBirth: {
+    type: 'date',
+    required: false,
+    default: null
+  },
   avatar: {
     type: 'string',
     required: false,

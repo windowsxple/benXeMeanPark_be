@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./swagger.config.js";
 import { testConnection } from "./libs/database.js";
 
 dotenv.config();
@@ -38,11 +40,21 @@ app.get("/health", (req, res) => {
   });
 });
 
-// API routes will be added here
-// Example:
-// app.use("/api/accounts", accountRoutes);
-// app.use("/api/bookings", bookingRoutes);
-// app.use("/api/trips", tripRoutes);
+// Swagger Documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Ben Xe Mien API Documentation",
+    customfavIcon: "/favicon.ico",
+  })
+);
+
+// API routes
+import authRoutes from './routes/authRoutes.js';
+
+app.use("/api/auth", authRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -66,15 +78,16 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, async () => {
-  console.log(` Server is running on http://localhost:${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`📦 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`📚 Swagger Documentation: http://localhost:${PORT}/api-docs`);
   
   // Test database connection
   const dbConnected = await testConnection();
   if (dbConnected) {
-    console.log(` Database connection established`);
+    console.log(`✅ Database connection established`);
   } else {
-    console.log(`  Database connection failed - check your DATABASE_URL in .env`);
+    console.log(`⚠️  Database connection failed - check your DATABASE_URL in .env`);
   }
 });
 
