@@ -1,5 +1,5 @@
 import express from 'express';
-import { register } from '../controllers/authController.js';
+import { register, login } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -68,6 +68,80 @@ const router = express.Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/register', register);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Authentication]
+ *     description: Authenticate user with email and password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *           example:
+ *             email: "user@example.com"
+ *             password: "password123"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *             example:
+ *               success: true
+ *               message: "Login successful"
+ *               data:
+ *                 account_id: 1
+ *                 email: "user@example.com"
+ *                 full_name: "Nguyen Van A"
+ *                 phone: "0123456789"
+ *                 date_of_birth: "2000-01-01T00:00:00.000Z"
+ *                 avatar: null
+ *                 role: "Customer"
+ *                 status: "Active"
+ *                 is_verified: false
+ *                 created_at: "2024-12-30T15:00:00.000Z"
+ *                 updated_at: "2024-12-30T15:00:00.000Z"
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: "Email and password are required"
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: "Invalid email or password"
+ *       403:
+ *         description: Account is inactive
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: "Account is inactive. Please contact support."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/login', login);
 
 export default router;
 
